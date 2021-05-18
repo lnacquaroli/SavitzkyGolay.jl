@@ -27,6 +27,7 @@ y = exp.(-t.^2) .+ 0.05 .* (1.0 .+ randn(length(t)))
 sg = savitzky_golay(y, 21, 4)
 plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
+![Example 2: SG2](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_2.png "Example 2: SG2")
 
 Another simpler example:
 ```julia
@@ -35,8 +36,9 @@ y = collect(0:20)
 sg = savitzky_golay(y, 11, 2)
 plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
+![Example 1: SG1](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_1.png "Example 1: SG1")
 
-The solution `sg` contains three fields: 
+The solution `sg` is a NamedTuple that contains three fields: 
 - `y` with the filtered signal,
 - `params` with the initial parameters
 - `coeff` with the computed coefficients
