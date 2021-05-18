@@ -1,5 +1,5 @@
 # SavitzkyGolay.jl
-Implementation of the 1D Savitzky-Golay filter in JuliaLang
+Implementation of the 1D Savitzky-Golay filter in [JuliaLang](https://julialang.org/).
 
 Simple-plain implementation of the Savitzky-Golay filter in Julia.
 
