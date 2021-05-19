@@ -4,9 +4,8 @@ module SavitzkyGolay
 # References:
 # https://scipy-cookbook.readthedocs.io/items/SavitzkyGolay.html
 # https://stackoverflow.com/a/48421852
+# https://gist.github.com/jiahao/b8b5ac328c18b7ae8a17
 #
-
-using LinearAlgebra
 
 export savitzky_golay
 
@@ -19,15 +18,16 @@ function savitzky_golay(y::AbstractVector, window_size::T, order::T; deriv::T=0,
     hw = Int((p.w - 1) / 2)
 
     # Compute coefficients
-    c = [k^i for k in -hw:hw, i in order_range]
-    m = pinv(c)[p.deriv+1,:] * (p.rate)^p.deriv * factorial(p.deriv)
+    J = [k^i for k in -hw:hw, i in order_range]
+    c = J' \ [1.0; zeros(length(order_range)-1)]
+    c .*= (p.rate)^p.deriv * factorial(p.deriv)
 
     # Pad the signal at the extremes with values taken from the signal itself
     initvals = p.y[1] .- abs.(reverse(p.y[2:hw+1]) .- p.y[1] )
     endvals = p.y[end] .+ abs.(reverse(p.y[end-hw:end-1] .- p.y[end]) )
     y_ = vcat(initvals, p.y, endvals)
 
-    return (y=_convolve_1d(y_, m), params=p, coeff=m)
+    return (y=_convolve_1d(y_, c), params=p, coeff=c)
 end
 
 function _check_inputs_sg(y, w, o, d, r)
