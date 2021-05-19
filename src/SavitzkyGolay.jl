@@ -9,7 +9,10 @@ module SavitzkyGolay
 
 export savitzky_golay
 
-function savitzky_golay(y::AbstractVector, window_size::T, order::T; deriv::T=0, rate::T=1) where T <: Real
+function savitzky_golay(
+    y::AbstractVector, window_size::T0, order::T0;
+    deriv::T0=0, rate::T1=1.0,
+    ) where {T0 <: Int64, T1 <: Real}
 
     p = _check_inputs_sg(y, window_size, order, deriv, rate)
 
@@ -35,7 +38,7 @@ function _check_inputs_sg(y, w, o, d, r)
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
     w ≥ o + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
-    return (y=Float64.(y), w=Int64(w), order=Int64(o), deriv=Int64(d), rate=Float64(r))
+    return (y=Float64.(y), w=w, order=o, deriv=d, rate=Float64(r))
 end
 
 function _convolve_1d(u::Vector, v::Vector)
