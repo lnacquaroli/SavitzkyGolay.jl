@@ -7,7 +7,21 @@ module SavitzkyGolay
 # https://gist.github.com/jiahao/b8b5ac328c18b7ae8a17
 #
 
-export savitzky_golay
+export savitzky_golay, SGolay
+
+Base.@kwdef struct SGolay
+    w::Int64          # Window size
+    order::Int64      # Polynomial order
+    deriv::Int64 = 0  # Derivative order
+    rate::Real = 1.0  # Rate
+end
+# Usage:
+# sg = SavitzkyGolay(w=11, order=2);
+# sg = SavitzkyGolay(w=11, order=2, deriv=1, rate=0.1)
+
+function (p::SGolay)(y::Vector)
+    return savitzky_golay(y, p.w, p.order; deriv=p.deriv, rate=p.rate)
+end
 
 function savitzky_golay(
     y::AbstractVector, window_size::T0, order::T0;
@@ -20,20 +34,30 @@ function savitzky_golay(
     order_range = 0 : p.order
     hw = Int((p.w - 1) / 2)
 
+    # Build Van der Monde matrix
+    V = _van_der_monde(hw, order_range)
+
     # Compute coefficients
-    J = [k^i for k in -hw:hw, i in order_range]
-    c = J' \ [1.0; zeros(length(order_range)-1)]
-    c .*= (p.rate)^p.deriv * factorial(p.deriv)
+    c = _coefficients(V, order_range, p)
 
     # Pad the signal at the extremes with values taken from the signal itself
-    initvals = p.y[1] .- abs.(reverse(p.y[2:hw+1]) .- p.y[1] )
-    endvals = p.y[end] .+ abs.(reverse(p.y[end-hw:end-1] .- p.y[end]) )
-    y_ = vcat(initvals, p.y, endvals)
+    y_ = _padding_signal(p, hw)
 
-    return (y=_convolve_1d(y_, c), params=p, coeff=c)
+    # Convolve signal and kernel
+    y_conv = _convolve_1d(y_, c)
+
+    return (y=y_conv, params=p, coeff=c)
 end
 
-function _check_inputs_sg(y, w, o, d, r)
+function _check_inputs_sg(y::Vector, w, o, d, r)
+    isodd(w) || throw(ArgumentError("w must be an even number."))
+    w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
+    w ≥ o + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
+    length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
+    return (y=Float64.(y), w=w, order=o, deriv=d, rate=Float64(r))
+end
+
+function _check_inputs_sg(w, o, d, r)
     isodd(w) || throw(ArgumentError("w must be an even number."))
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
     w ≥ o + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
@@ -51,5 +75,33 @@ function _convolve_1d(u::Vector, v::Vector)
     end
     return w[n:end-n+1]
 end
+
+function _van_der_monde(hw, order_range)
+    V = zeros(2*hw + 1, length(order_range))
+    @inbounds for i in -hw:hw, j in order_range
+        V[i+hw+1, j+1] = i^j
+    end
+    return V
+end
+
+function _coefficients(V, order_range, p)
+    c = V' \ _onehot(p.deriv + 1, length(order_range)) #[1.0; zeros(length(order_range)-1)]
+    c .*= (p.rate)^p.deriv * factorial(p.deriv)
+    return c
+end
+
+function _onehot(i, m)
+    m > i || throw(ArgumentError("length of vector must be greater than the position"))
+    oh = zeros(m)
+    oh[i] = 1.0
+    return oh
+end
+
+function _padding_signal(p, hw)
+    initvals = p.y[1] .- abs.(reverse(p.y[2:hw+1]) .- p.y[1])
+    endvals = p.y[end] .+ abs.(reverse(p.y[end-hw:end-1] .- p.y[end]))
+    return vcat(initvals, p.y, endvals)
+end
+
 
 end  # module SavitzkyGolay
