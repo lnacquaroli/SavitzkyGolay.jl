@@ -15,9 +15,6 @@ Base.@kwdef struct SGolay
     deriv::Int64 = 0  # Derivative order
     rate::Real = 1.0  # Rate
 end
-# Usage:
-# sg = SavitzkyGolay(w=11, order=2);
-# sg = SavitzkyGolay(w=11, order=2, deriv=1, rate=0.1)
 
 function (p::SGolay)(y::Vector)
     return savitzky_golay(y, p.w, p.order; deriv=p.deriv, rate=p.rate)
@@ -34,8 +31,8 @@ function savitzky_golay(
     order_range = 0 : p.order
     hw = Int((p.w - 1) / 2)
 
-    # Build Van der Monde matrix
-    V = _van_der_monde(hw, order_range)
+    # Build Vandermonde matrix
+    V = _vandermonde(hw, order_range)
 
     # Compute coefficients
     c = _coefficients(V, order_range, p)
@@ -76,7 +73,7 @@ function _convolve_1d(u::Vector, v::Vector)
     return w[n:end-n+1]
 end
 
-function _van_der_monde(hw, order_range)
+function _vandermonde(hw, order_range)
     V = zeros(2*hw + 1, length(order_range))
     @inbounds for i in -hw:hw, j in order_range
         V[i+hw+1, j+1] = i^j
