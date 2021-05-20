@@ -1,4 +1,4 @@
 name = "SavitzkyGolay"
 uuid = "a734145c-da2a-406d-927e-3158c7080226"
 authors = ["lnacquaroli "]
-version = "0.2.0"
+version = "0.2.2"
