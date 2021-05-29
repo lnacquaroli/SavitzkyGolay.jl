@@ -38,10 +38,11 @@ plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
 ![Example 1: SG1](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_1.png "Example 1: SG1")
 
-The solution `sg` is a NamedTuple that contains three fields: 
+The solution `sg` is a `SGFilter` type that contains four fields: 
 - `y` with the filtered signal,
 - `params` with the initial parameters
 - `coeff` with the computed coefficients
+- `Vdm` with the Vandermonde matrix
 
 ## Constructor
 
@@ -73,3 +74,9 @@ plot(t, [y y2.y], label=["Original signal" "Filtered signal"], ylabel="", xlabel
 ```
 
 The solutions `y1` and `y2` are the same type as the `sg` above.
+
+## References
+
+- [SciPyCookbook](https://scipy-cookbook.readthedocs.io/items/SavitzkyGolay.html)
+- [StackOverflow - 48421852](https://stackoverflow.com/a/48421852)
+- [Gist - jiahao](https://gist.github.com/jiahao/b8b5ac328c18b7ae8a17)
