@@ -1,4 +1,7 @@
 name = "SavitzkyGolay"
-uuid = "a734145c-da2a-406d-927e-3158c7080226"
-authors = ["lnacquaroli "]
-version = "0.2.3"
+uuid = "c4bf5708-b6a6-4fbe-bcd0-6850ed671584"
+authors = ["flvisa "]
+version = "0.2.4"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
