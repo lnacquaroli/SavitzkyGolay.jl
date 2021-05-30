@@ -70,7 +70,6 @@ t = 0:20
 y = collect(0:20)
 f1 = SGolay(11, 2)
 y1 = f1(y)
-plot(t, [y y1.y], label=["Original signal" "Filtered signal"], ylabel="", xlabel="t", legend=:topleft)
 ```
 
 ```julia
@@ -78,7 +77,6 @@ t = LinRange(-4, 4, 500)
 y = exp.(-t.^2) .+ 0.05 .* (1.0 .+ randn(length(t)))
 f2 = SGolay(21, 4)
 y2 = f2(y)
-plot(t, [y y2.y], label=["Original signal" "Filtered signal"], ylabel="", xlabel="t", legend=:topleft)
 ```
 
 The solutions `y1` and `y2` are the same type as the `SGolayResults`.
