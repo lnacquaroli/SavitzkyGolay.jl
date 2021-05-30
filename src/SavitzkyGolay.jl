@@ -1,25 +1,34 @@
 module SavitzkyGolay
 
-export savitzky_golay, SGolay, SGFilter
+export savitzky_golay, SGolay, SGolayResults
 
 using LinearAlgebra
 
-Base.@kwdef struct SGolay
-    w::Int64          # Window size
-    order::Int64      # Polynomial order
-    deriv::Int64 = 0  # Derivative order
-    rate::Real = 1.0  # Rate
+struct SGolay
+    w::Int64        # Window size
+    order::Int64    # Polynomial order
+    deriv::Int64    # Derivative order
+    rate::Real      # Rate
+    function SGolay(w, order, deriv, rate)
+        isodd(w) || throw(ArgumentError("w must be an even number."))
+        w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
+        w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
+        return new(w, order, deriv, rate)
+    end
 end
 
-struct SGFilter{T <: Float64}
-    y::Array{T}
-    params::NamedTuple
-    coeff::Array{T}
-    Vdm::Matrix{Float64}
+SGolay(w, o) = SGolay(w, o, 0, 1.0)
+SGolay(w, o, d) = SGolay(w, o, d, 1.0)
+
+struct SGolayResults{T <: Float64}
+    y::Vector{T}
+    params::SGolay
+    coeff::Vector{T}
+    Vdm::Matrix{T}
 end
 
 function (p::SGolay)(y::AbstractVector)
-    return savitzky_golay(y, p.w, p.order; deriv=p.deriv, rate=p.rate)
+    return _savitzky_golay(y, p)
 end
 
 function savitzky_golay(
@@ -27,34 +36,26 @@ function savitzky_golay(
     deriv::T0=0, rate::T1=1.0,
     ) where {T0 <: Int64, T1 <: Real}
 
-    p = _check_input_sg(y, window_size, order, deriv, rate)
-
-    # Determine order range and half window size
-    order_range = 0 : p.order
-    hw = Int((p.w - 1) / 2)
-
-    # Build Vandermonde matrix
-    V = _vandermonde(hw, order_range)
-
-    # Compute coefficients
-    c = _coefficients(V, order_range, p)
-
-    # Pad the signal at the extremes with values taken from the signal itself
-    y_ = _padding_signal(p, hw)
-
-    # Convolve signal and kernel
-    y_conv = _convolve_1d(y_, c)
-
-    # return (y=y_conv, params=p, coeff=c, Vdm=V)
-    return SGFilter(y_conv, p, c, V)
+    y_, p = _check_input_sg(y, window_size, order, deriv, rate)
+    return _savitzky_golay(y_, p)
 end
 
-function _check_input_sg(y::Vector, w, o, d, r)
+function _savitzky_golay(y::AbstractVector, p::SGolay)
+    order_range = 0 : p.order
+    hw = Int((p.w - 1) / 2) # half-window size
+    V = _vandermonde(hw, order_range)
+    c = _coefficients(V, order_range, p)
+    y_ = _padding_signal(y, hw)
+    y_conv = _convolve_1d(y_, c)
+    return SGolayResults(y_conv, p, c, V)
+end
+
+function _check_input_sg(y::Vector, w, order, deriv, rate)
     isodd(w) || throw(ArgumentError("w must be an even number."))
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
-    w ≥ o + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
+    w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
-    return (y=Float64.(y), w=w, order=o, deriv=d, rate=Float64(r))
+    return Float64.(y), SGolay(w, order, deriv, rate)
 end
 
 function _convolve_1d(u::Vector, v::Vector)
@@ -79,8 +80,8 @@ end
 function _coefficients(V, order_range, p)
     Vqr = qr(V')
     c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range)))
-    c .*= (p.rate)^p.deriv * factorial(p.deriv)
-    return c
+    c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
+    return reverse(c)
 end
 
 function _onehot(i, m)
@@ -90,10 +91,10 @@ function _onehot(i, m)
     return oh
 end
 
-function _padding_signal(p, hw)
-    initvals = p.y[1] .- abs.(reverse(p.y[2:hw+1]) .- p.y[1])
-    endvals = p.y[end] .+ abs.(reverse(p.y[end-hw:end-1] .- p.y[end]))
-    return vcat(initvals, p.y, endvals)
+function _padding_signal(y, hw)
+    initvals = y[1] .- abs.(reverse(y[2:hw+1]) .- y[1])
+    endvals = y[end] .+ abs.(reverse(y[end-hw:end-1] .- y[end]))
+    return vcat(initvals, y, endvals)
 end
 
 end  # module SavitzkyGolay
