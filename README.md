@@ -38,19 +38,27 @@ plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
 ![Example 1: SG1](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_1.png "Example 1: SG1")
 
-The solution `sg` is a `SGFilter` type that contains four fields: 
+The solution `sg` is a `SGolayResults` type that contains four fields: 
 - `y` with the filtered signal,
-- `params` with the initial parameters
+- `params` type `SGolay` with the initial parameters
 - `coeff` with the computed coefficients
 - `Vdm` with the Vandermonde matrix
 
 ## Constructor
 
-There is an option to call the constructor `SGolay` to build the filter and then use it in different places. To call the constructor you need to specify at least two parameters, the full window size and the polynomial order. For instance:
-```julia
-sgfilter = SGolay(w=11, order=2);
+There is an option to call the constructor `SGolay` to build the filter and then use it in different places. To call the constructor you need to specify at least two parameters, the full window size and the polynomial order. The constructor accepts the following arguments:
 
-sgfilter = SGolay(w=11, order=2, deriv=1, rate=0.1)
+```julia
+SGolay(window_size, polynomial_order, derivative, rate)
+```
+
+For instance:
+```julia
+sgfilter = SGolay(11, 2)
+
+sgfilter = SGolay(11, 2, 1)
+
+sgfilter = SGolay(11, 2, 1, 0.1)
 ```
 
 By default, if not specified, `deriv=0` and `rate=1.0`.
@@ -60,7 +68,7 @@ The same examples above with constructors are as follow:
 ```julia
 t = 0:20
 y = collect(0:20)
-f1 = SGolay(w=11, order=2)
+f1 = SGolay(11, 2)
 y1 = f1(y)
 plot(t, [y y1.y], label=["Original signal" "Filtered signal"], ylabel="", xlabel="t", legend=:topleft)
 ```
@@ -68,12 +76,12 @@ plot(t, [y y1.y], label=["Original signal" "Filtered signal"], ylabel="", xlabel
 ```julia
 t = LinRange(-4, 4, 500)
 y = exp.(-t.^2) .+ 0.05 .* (1.0 .+ randn(length(t)))
-f2 = SGolay(w=21, order=4)
+f2 = SGolay(21, 4)
 y2 = f2(y)
 plot(t, [y y2.y], label=["Original signal" "Filtered signal"], ylabel="", xlabel="t", legend=:topleft)
 ```
 
-The solutions `y1` and `y2` are the same type as the `sg` above.
+The solutions `y1` and `y2` are the same type as the `SGolayResults`.
 
 ## References
 
