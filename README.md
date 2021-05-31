@@ -19,7 +19,15 @@ using SavitzkyGolay
 using Plots # This is for visualization purposes, not required in the SG package itself
 ```
 
-Suppose we have a signal with noise that want to smooth out.
+Suppose we have a signal with noise that want to smooth out. The function for this is `savitzky_golay`, that accepts the following arguments:
+
+```julia
+savitzky_golay(y::Vector, window_size::Int, order::Int; deriv::Int=0, rate::Real=1.0)    
+```
+
+where `y` is the data vector with noise, and `window_size`, `order`, `deriv` and `rate` are options for the Savitzky-Golay filter. Notice that `y`, `window_size` and `order` are mandatory arguments to input, while `deriv=0` and `rate=1.0` by default.
+
+## Examples
 
 ```julia
 t = LinRange(-4, 4, 500)
@@ -68,15 +76,15 @@ The same examples above with constructors are as follow:
 ```julia
 t = 0:20
 y = collect(0:20)
-f1 = SGolay(11, 2)
-y1 = f1(y)
+sgfilter1 = SGolay(11, 2)
+y1 = sgfilter1(y)
 ```
 
 ```julia
 t = LinRange(-4, 4, 500)
 y = exp.(-t.^2) .+ 0.05 .* (1.0 .+ randn(length(t)))
-f2 = SGolay(21, 4)
-y2 = f2(y)
+sgfilter2 = SGolay(21, 4)
+y2 = sgfilter2(y)
 ```
 
 The solutions `y1` and `y2` are the same type as the `SGolayResults`.
