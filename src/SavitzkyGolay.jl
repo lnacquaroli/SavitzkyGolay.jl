@@ -4,16 +4,16 @@ export savitzky_golay, SGolay, SGolayResults
 
 using LinearAlgebra
 
-struct SGolay
-    w::Int64        # Window size
-    order::Int64    # Polynomial order
-    deriv::Int64    # Derivative order
-    rate::Real      # Rate
-    function SGolay(w, order, deriv, rate)
+struct SGolay{T1 <: Int64, T2 <: Real}
+    w::T1        # Window size
+    order::T1    # Polynomial order
+    deriv::T1    # Derivative order
+    rate::T2      # Rate
+    function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Int64, T2 <: Real}
         isodd(w) || throw(ArgumentError("w must be an even number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
-        return new(w, order, deriv, rate)
+        return new{T1, T2}(w, order, deriv, rate)
     end
 end
 
