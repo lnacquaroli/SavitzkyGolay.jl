@@ -4,12 +4,12 @@ export savitzky_golay, SGolay, SGolayResults
 
 using LinearAlgebra
 
-struct SGolay{T1 <: Int64, T2 <: Real}
+struct SGolay{T1 <: Int, T2 <: Real}
     w::T1        # Window size
     order::T1    # Polynomial order
     deriv::T1    # Derivative order
     rate::T2      # Rate
-    function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Int64, T2 <: Real}
+    function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Int, T2 <: Real}
         isodd(w) || throw(ArgumentError("w must be an even number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
@@ -34,7 +34,7 @@ end
 function savitzky_golay(
     y::AbstractVector, window_size::T0, order::T0;
     deriv::T0=0, rate::T1=1.0,
-    ) where {T0 <: Int64, T1 <: Real}
+    ) where {T0 <: Int, T1 <: Real}
 
     y_, p = _check_input_sg(y, window_size, order, deriv, rate)
     return _savitzky_golay(y_, p)
@@ -42,7 +42,7 @@ end
 
 function _savitzky_golay(y::AbstractVector, p::SGolay)
     order_range = 0 : p.order
-    hw = Int((p.w - 1) / 2) # half-window size
+    hw = Int64((p.w - 1) / 2) # half-window size
     V = _vandermonde(hw, order_range)
     c = _coefficients(V, order_range, p)
     y_ = _padding_signal(y, hw)
@@ -58,7 +58,7 @@ function _check_input_sg(y::Vector, w, order, deriv, rate)
     return Float64.(y), SGolay(w, order, deriv, rate)
 end
 
-function _convolve_1d(u::Vector, v::Vector)
+function _convolve_1d(u::AbstractVector, v::Vector)
     m = length(u)
     n = length(v)
     m > n || throw(ArgumentError("length of signal u must be greater than length of kernel v."))
@@ -69,7 +69,7 @@ function _convolve_1d(u::Vector, v::Vector)
     return w[n:end-n+1]
 end
 
-function _vandermonde(hw, order_range)
+function _vandermonde(hw::T, order_range::UnitRange{T}) where T <: Int64
     V = zeros(2*hw + 1, length(order_range))
     @inbounds for i in -hw:hw, j in order_range
         V[i+hw+1, j+1] = i^j
@@ -77,21 +77,21 @@ function _vandermonde(hw, order_range)
     return V
 end
 
-function _coefficients(V, order_range, p)
+function _coefficients(V::Matrix{Float64}, order_range::UnitRange{Int64}, p::SGolay)
     Vqr = qr(V')
     c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range)))
     c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
     return reverse(c)
 end
 
-function _onehot(i, m)
+function _onehot(i::T, m::T) where T <: Int64
     m > i || throw(ArgumentError("length of vector must be greater than the position"))
     oh = zeros(m)
     oh[i] = 1.0
     return oh
 end
 
-function _padding_signal(y, hw)
+function _padding_signal(y::AbstractVector, hw::Int64)
     initvals = y[1] .- abs.(reverse(y[2:hw+1]) .- y[1])
     endvals = y[end] .+ abs.(reverse(y[end-hw:end-1] .- y[end]))
     return vcat(initvals, y, endvals)
