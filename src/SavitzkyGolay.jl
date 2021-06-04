@@ -4,12 +4,12 @@ export savitzky_golay, SGolay, SGolayResults
 
 using LinearAlgebra
 
-struct SGolay{T1 <: Int, T2 <: Real}
+struct SGolay{T1 <: Signed, T2 <: Real}
     w::T1        # Window size
     order::T1    # Polynomial order
     deriv::T1    # Derivative order
     rate::T2      # Rate
-    function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Int, T2 <: Real}
+    function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Signed, T2 <: Real}
         isodd(w) || throw(ArgumentError("w must be an even number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
@@ -34,7 +34,7 @@ end
 function savitzky_golay(
     y::AbstractVector, window_size::T0, order::T0;
     deriv::T0=0, rate::T1=1.0,
-    ) where {T0 <: Int, T1 <: Real}
+    ) where {T0 <: Signed, T1 <: Real}
 
     y_, p = _check_input_sg(y, window_size, order, deriv, rate)
     return _savitzky_golay(y_, p)
