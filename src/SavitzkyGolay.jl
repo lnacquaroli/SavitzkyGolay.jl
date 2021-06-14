@@ -17,8 +17,8 @@ struct SGolay{T1 <: Signed, T2 <: Real}
     end
 end
 
-SGolay(w, o) = SGolay(w, o, 0, 1.0)
-SGolay(w, o, d) = SGolay(w, o, d, 1.0)
+SGolay(w, order) = SGolay(w, order, 0, 1.0)
+SGolay(w, order, deriv) = SGolay(w, order, deriv, 1.0)
 
 struct SGolayResults{T <: Float64}
     y::Vector{T}
@@ -35,7 +35,6 @@ function savitzky_golay(
     y::AbstractVector, window_size::T0, order::T0;
     deriv::T0=0, rate::T1=1.0,
     ) where {T0 <: Signed, T1 <: Real}
-
     y_, p = _check_input_sg(y, window_size, order, deriv, rate)
     return _savitzky_golay(y_, p)
 end
@@ -43,7 +42,8 @@ end
 function _savitzky_golay(y::AbstractVector, p::SGolay)
     order_range = 0 : p.order
     hw = Int64((p.w - 1) / 2) # half-window size
-    V = _vandermonde(hw, order_range)
+    V = zeros(2*hw + 1, length(order_range))
+    _vandermonde!(V, hw, order_range)
     c = _coefficients(V, order_range, p)
     y_ = _padding_signal(y, hw)
     y_conv = _convolve_1d(y_, c)
@@ -69,15 +69,13 @@ function _convolve_1d(u::AbstractVector, v::Vector)
     return w[n:end-n+1]
 end
 
-function _vandermonde(hw::T, order_range::UnitRange{T}) where T <: Int64
-    V = zeros(2*hw + 1, length(order_range))
+function _vandermonde!(V::Matrix{T1}, hw::T2, order_range::UnitRange{T2}) where {T1 <: Float64, T2 <: Int64}
     @inbounds for i in -hw:hw, j in order_range
         V[i+hw+1, j+1] = i^j
     end
-    return V
 end
 
-function _coefficients(V::Matrix{Float64}, order_range::UnitRange{Int64}, p::SGolay)
+function _coefficients(V::Matrix{T1}, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
     Vqr = qr(V')
     c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range)))
     c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
