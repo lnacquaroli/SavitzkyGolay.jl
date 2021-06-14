@@ -1,7 +1,7 @@
 name = "SavitzkyGolay"
 uuid = "c4bf5708-b6a6-4fbe-bcd0-6850ed671584"
 authors = ["lnacquaroli "]
-version = "0.3.3"
+version = "0.4.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
