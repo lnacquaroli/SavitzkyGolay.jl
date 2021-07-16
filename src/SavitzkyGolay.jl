@@ -10,7 +10,7 @@ struct SGolay{T1 <: Signed, T2 <: Real}
     deriv::T1    # Derivative order
     rate::T2      # Rate
     function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Signed, T2 <: Real}
-        isodd(w) || throw(ArgumentError("w must be an even number."))
+        isodd(w) || throw(ArgumentError("w must be an odd number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
         return new{T1, T2}(w, order, deriv, rate)
