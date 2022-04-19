@@ -51,7 +51,7 @@ function _savitzky_golay(y::AbstractVector, p::SGolay)
 end
 
 function _check_input_sg(y::Vector, w, order, deriv, rate)
-    isodd(w) || throw(ArgumentError("w must be an even number."))
+    isodd(w) || throw(ArgumentError("w must be an odd number."))
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
     w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
