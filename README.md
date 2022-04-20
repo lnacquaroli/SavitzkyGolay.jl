@@ -5,10 +5,10 @@ Simple-plain implementation of the Savitzky-Golay filter in Julia.
 
 ## Installation
 
-This package is not yet registered. It can be installed in Julia with the following ([see further](https://docs.julialang.org/en/v1/stdlib/Pkg/index.html#Adding-unregistered-packages-1)):
+This package is registered and can be installed in Julia with the following:
 ```julia
 julia> ]
-pkg> add https://github.com/lnacquaroli/SavitzkyGolay.jl
+pkg> add SavitzkyGolay
 ```
 
 ## Usage
