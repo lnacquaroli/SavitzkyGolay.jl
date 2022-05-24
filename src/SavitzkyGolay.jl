@@ -50,7 +50,7 @@ function _savitzky_golay(y::AbstractVector, p::SGolay)
     return SGolayResults(y_conv, p, c, V)
 end
 
-function _check_input_sg(y::Vector, w, order, deriv, rate)
+function _check_input_sg(y::AbstractVector, w, order, deriv, rate)
     isodd(w) || throw(ArgumentError("w must be an odd number."))
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
     w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
