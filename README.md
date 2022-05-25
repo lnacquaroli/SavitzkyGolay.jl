@@ -22,7 +22,7 @@ using Plots # This is for visualization purposes, not required in the SG package
 Suppose we have a signal with noise that want to smooth out. The function for this is `savitzky_golay`, that accepts the following arguments:
 
 ```julia
-savitzky_golay(y::Vector, window_size::Int, order::Int; deriv::Int=0, rate::Real=1.0)    
+savitzky_golay(y::AbstractVector, window_size::Int, order::Int; deriv::Int=0, rate::Real=1.0)    
 ```
 
 where `y` is the data vector with noise, and `window_size`, `order`, `deriv` and `rate` are options for the Savitzky-Golay filter. Notice that `y`, `window_size` and `order` are mandatory arguments to input, while `deriv=0` and `rate=1.0` by default.
