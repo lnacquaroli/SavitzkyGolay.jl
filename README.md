@@ -46,7 +46,7 @@ y = exp.(-t.^2) .+ 0.05 .* (1.0 .+ randn(length(t)))
 sg = savitzky_golay(y, 21, 4)
 plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
-![Example 2: SG2](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_2.png "Example 2: SG2")
+![Example 2: SG1](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/output-sg-exp.png "Example 1: SG1")
 
 Another simpler example:
 ```julia
@@ -55,27 +55,19 @@ y = collect(0:20)
 sg = savitzky_golay(y, 11, 2)
 plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
-![Example 1: SG1](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_1.png "Example 1: SG1")
+![Example 2: SG2](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/output-sg-line.png "Example 2: SG2")
 
 Example with derivatives:
 
 ```julia
-start = -5
-stop = 15
-le = 200
-ord = 3
-der = 1
-rate = le/(stop-start)
-ws = 21
-
-x = LinRange(start, stop, le)
+x = LinRange(-5, 15, 200)
 data = 0.15*x.^3 - 2*x.^2 + x  .+ randn(length(x))
-deriv_exact = 0.45*x.^2 - 4*x .+ 1
-sg = savitzky_golay(data, ws, ord, deriv=der)
-sg_rate = savitzky_golay(data, ws, ord, deriv=der, rate=rate)
+data_derivative = 0.45*x.^2 - 4*x .+ 1
+sg = savitzky_golay(data, 21, 3, deriv=1)
+sg_rate = savitzky_golay(data, 21, 3, deriv=1, rate=200/(15-(-5)))
 ```
 
-![Example 2: SG2](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/output.png "Example 2: SG2 with derivative")
+![Example 3: SG3](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/output-sg-deriv.png "Example 3: SG3 with derivative")
 
 ## Constructor
 
