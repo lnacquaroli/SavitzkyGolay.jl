@@ -13,6 +13,7 @@ struct SGolay{T1 <: Signed, T2 <: Real}
         isodd(w) || throw(ArgumentError("w must be an odd number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
+        deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
         return new{T1, T2}(w, order, deriv, rate)
     end
 end
@@ -55,6 +56,7 @@ function _check_input_sg(y::AbstractVector, w, order, deriv, rate)
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
     w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
+    deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
     return Float64.(y), SGolay(w, order, deriv, rate)
 end
 
