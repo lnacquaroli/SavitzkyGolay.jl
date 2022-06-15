@@ -22,12 +22,21 @@ using Plots # This is for visualization purposes, not required in the SG package
 Suppose we have a signal with noise that want to smooth out. The function for this is `savitzky_golay`, that accepts the following arguments:
 
 ```julia
-savitzky_golay(y::AbstractVector, window_size::Int, order::Int; deriv::Int=0, rate::Real=1.0)    
+sg = savitzky_golay(y::AbstractVector, window_size::Int, order::Int; deriv::Int=0, rate::Real=1.0)    
 ```
 
-# ADD SOME DESCRIPTION OF THE ARGUMENTS HERE
+- `y`: The data vector with noise to be filtered.
+- `window_size`: The length of the filter window (i.e., the number of coefficients). Must be an odd number.
+- `order`: The order of the polynomial used to fit the samples. Must be less than `window_size`.
+- `deriv`: The order of the derivative to compute. This must be a nonnegative integer. The default is 0, which means to filter the data without differentiating. If `deriv > 0` it may need scaling which can be achieved using the `rate` optional argument. (optional) 
+- `rate`: Scaling real number when using the derivative. (optional)
 
-where `y` is the data vector with noise, and `window_size`, `order`, `deriv` and `rate` are options for the Savitzky-Golay filter. Notice that `y`, `window_size` and `order` are mandatory arguments to input, while `deriv=0` and `rate=1.0` by default.
+The solution `sg` is a `SGolayResults` type that contains four fields: 
+
+- `y` with the filtered signal,
+- `params` type `SGolay` with the initial parameters
+- `coeff` with the computed coefficients
+- `Vdm` with the Vandermonde matrix
 
 ## Examples
 
@@ -48,11 +57,25 @@ plot(t, [y sg.y], label=["Original signal" "Filtered signal"])
 ```
 ![Example 1: SG1](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/Figure_1.png "Example 1: SG1")
 
-The solution `sg` is a `SGolayResults` type that contains four fields: 
-- `y` with the filtered signal,
-- `params` type `SGolay` with the initial parameters
-- `coeff` with the computed coefficients
-- `Vdm` with the Vandermonde matrix
+Example with derivatives:
+
+```julia
+start = -5
+stop = 15
+le = 200
+ord = 3
+der = 1
+rate = le/(stop-start)
+ws = 21
+
+x = LinRange(start, stop, le)
+data = 0.15*x.^3 - 2*x.^2 + x  .+ randn(length(x))
+deriv_exact = 0.45*x.^2 - 4*x .+ 1
+sg = savitzky_golay(data, ws, ord, deriv=der)
+sg_rate = savitzky_golay(data, ws, ord, deriv=der, rate=rate)
+```
+
+![Example 2: SG2](https://github.com/lnacquaroli/SavitzkyGolay.jl/blob/main/examples/output.png "Example 2: SG2 with derivative")
 
 ## Constructor
 
