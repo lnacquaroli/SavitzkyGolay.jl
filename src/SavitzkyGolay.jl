@@ -92,8 +92,8 @@ function _onehot(i::T, m::T) where T <: Int64
 end
 
 function _padding_signal(y::AbstractVector, hw::Int64)
-    initvals = y[1] .- abs.(reverse(y[2:hw+1]) .- y[1])
-    endvals = y[end] .+ abs.(reverse(y[end-hw:end-1] .- y[end]))
+    initvals = 2*y[1] .- reverse(y[2:hw+1])
+    endvals = 2*y[end] .- reverse(y[end-hw:end-1])
     return vcat(initvals, y, endvals)
 end
 
