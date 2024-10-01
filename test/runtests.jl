@@ -16,4 +16,8 @@ y1c_ = f1(y1)
 
 f2 = SGolay(21, 4)
 y2c_ = f2(y2)
+
+@test sum(abs.(y1_.y .- y1)) ≈ 0     atol = 1e-12
+@test sum(abs.(y1c_.y .- y1_.y)) ≈ 0 atol = 1e-12
+
 end
