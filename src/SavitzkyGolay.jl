@@ -38,10 +38,18 @@ function (p::SGolay)(y::AbstractVector, wts::AbstractVector)
 end
 
 function savitzky_golay(
-    y::AbstractVector, window_size::T0, order::T0;
-    deriv::T0=0, rate::T1=1.0,
+        y::AbstractVector, window_size::T0, order::T0;
+        deriv::T0=0, rate::T1=1.0, haswts=false,
     ) where {T0 <: Signed, T1 <: Real}
-    y_, p = _check_input_sg(y, window_size, order, deriv, rate)
+    y_, p = _check_input_sg(y, window_size, order, deriv, rate, haswts)
+    return _savitzky_golay(y_, p)
+end
+
+function savitzky_golay(
+        y::AbstractVector, wts::AbstractVector, window_size::T0, order::T0;
+        deriv::T0=0, rate::T1=1.0, haswts=true,
+    ) where {T0 <: Signed, T1 <: Real}
+    y_, wts_, p = _check_input_sg(y, wts, window_size, order, deriv, rate, haswts)
     return _savitzky_golay(y_, p)
 end
 
@@ -73,13 +81,22 @@ function _savitzky_golay(y::AbstractVector, wts::AbstractVector, p::SGolay)
     return SGolayResults(y_conv, p, c, V)
 end
 
-function _check_input_sg(y::AbstractVector, w, order, deriv, rate)
+function _check_input_sg(y::AbstractVector, w, order, deriv, rate, haswts=false)
     isodd(w) || throw(ArgumentError("w must be an odd number."))
     w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
     w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
     deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
     return Float64.(y), SGolay(w, order, deriv, rate)
+end
+
+function _check_input_sg(y::AbstractVector, wts::AbstractVector, w, order, deriv, rate, haswts=true)
+    isodd(w) || throw(ArgumentError("w must be an odd number."))
+    w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
+    w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
+    length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
+    deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
+    return Float64.(y), Float64.(wts), SGolay(w, order, deriv, rate, haswts=haswts)
 end
 
 function _convolve_1d(u::AbstractVector, v::Vector)
