@@ -8,13 +8,14 @@ struct SGolay{T1 <: Signed, T2 <: Real}
     w::T1        # Window size
     order::T1    # Polynomial order
     deriv::T1    # Derivative order
-    rate::T2      # Rate
-    function SGolay(w::T1, order::T1, deriv::T1, rate::T2) where {T1 <: Signed, T2 <: Real}
+    rate::T2     # Rate
+    haswts::Bool
+    function SGolay(w::T1, order::T1, deriv::T1, rate::T2; haswts::Bool=false) where {T1 <: Signed, T2 <: Real}
         isodd(w) || throw(ArgumentError("w must be an odd number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
         deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
-        return new{T1, T2}(w, order, deriv, rate)
+        return new{T1, T2}(w, order, deriv, rate, haswts)
     end
 end
 
@@ -32,6 +33,10 @@ function (p::SGolay)(y::AbstractVector)
     return _savitzky_golay(y, p)
 end
 
+function (p::SGolay)(y::AbstractVector, wts::AbstractVector)
+    return _savitzky_golay(y, wts, p)
+end
+
 function savitzky_golay(
     y::AbstractVector, window_size::T0, order::T0;
     deriv::T0=0, rate::T1=1.0,
@@ -41,6 +46,23 @@ function savitzky_golay(
 end
 
 function _savitzky_golay(y::AbstractVector, p::SGolay)
+    if p.haswts
+        throw(ArgumentError("Missing wts vector as second argument"))
+    end
+    order_range = 0 : p.order
+    hw = Int64((p.w - 1) / 2) # half-window size
+    V = zeros(2*hw + 1, length(order_range))
+    _vandermonde!(V, hw, order_range)
+    c = _coefficients(V, order_range, p)
+    y_ = _padding_signal(y, hw)
+    y_conv = _convolve_1d(y_, c)
+    return SGolayResults(y_conv, p, c, V)
+end
+
+function _savitzky_golay(y::AbstractVector, wts::AbstractVector, p::SGolay)
+    if !p.haswts
+        throw(ArgumentError("wts vector argument unusable, haswts is false"))
+    end
     order_range = 0 : p.order
     hw = Int64((p.w - 1) / 2) # half-window size
     V = zeros(2*hw + 1, length(order_range))
