@@ -50,7 +50,7 @@ function savitzky_golay(
         deriv::T0=0, rate::T1=1.0, haswts=true,
     ) where {T0 <: Signed, T1 <: Real}
     y_, wts_, p = _check_input_sg(y, wts, window_size, order, deriv, rate, haswts)
-    return _savitzky_golay(y_, p)
+    return _savitzky_golay(y_, wts_, p)
 end
 
 function _savitzky_golay(y::AbstractVector, p::SGolay)
@@ -75,7 +75,7 @@ function _savitzky_golay(y::AbstractVector, wts::AbstractVector, p::SGolay)
     hw = Int64((p.w - 1) / 2) # half-window size
     V = zeros(2*hw + 1, length(order_range))
     _vandermonde!(V, hw, order_range)
-    c = _coefficients(V, order_range, p)
+    c = _coefficients((V .* wts), order_range, p)
     y_ = _padding_signal(y, hw)
     y_conv = _convolve_1d(y_, c)
     return SGolayResults(y_conv, p, c, V)
@@ -96,6 +96,8 @@ function _check_input_sg(y::AbstractVector, wts::AbstractVector, w, order, deriv
     w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
     deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
+    length(wts) == w ||  throw(ArgumentError("wts vector length must equal window size"))
+    all(wts .> 0) ||  throw(ArgumentError("wts vector must be positive definite"))
     return Float64.(y), Float64.(wts), SGolay(w, order, deriv, rate, haswts=haswts)
 end
 
