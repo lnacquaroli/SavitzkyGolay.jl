@@ -75,7 +75,7 @@ function _savitzky_golay(y::AbstractVector, wts::AbstractVector, p::SGolay)
     hw = Int64((p.w - 1) / 2) # half-window size
     V = zeros(2*hw + 1, length(order_range))
     _vandermonde!(V, hw, order_range)
-    c = _coefficients((V .* wts), order_range, p)
+    c = _coefficients(V, wts, order_range, p)
     y_ = _padding_signal(y, hw)
     y_conv = _convolve_1d(y_, c)
     return SGolayResults(y_conv, p, c, V)
@@ -121,6 +121,16 @@ end
 function _coefficients(V::Matrix{T1}, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
     Vqr = qr(V')
     c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range)))
+    c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
+    return reverse(c)
+end
+
+function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
+    W = diagm(wts)
+    VtW = V' * W
+    VtWV = VtW * V
+    invVtWV = inv(VtWV)
+    c = vec( _onehot(p.deriv + 1, length(order_range))' * invVtWV * VtW )
     c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
     return reverse(c)
 end
