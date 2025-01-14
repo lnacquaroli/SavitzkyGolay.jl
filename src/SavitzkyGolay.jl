@@ -22,8 +22,8 @@ end
 SGolay(w, order) = SGolay(w, order, 0, 1.0)
 SGolay(w, order, deriv) = SGolay(w, order, deriv, 1.0)
 
-struct SGolayResults{T <: Float64}
-    y::Vector{T}
+struct SGolayResults{Ty <: Number, T<:Number}
+    y::Vector{Ty}
     params::SGolay
     coeff::Vector{T}
     Vdm::Matrix{T}
@@ -105,27 +105,28 @@ function _convolve_1d(u::AbstractVector, v::Vector)
     m = length(u)
     n = length(v)
     m > n || throw(ArgumentError("length of signal u must be greater than length of kernel v."))
-    w = zeros(m + n - 1)
+    ytype = typeof(u[begin]*v[begin])
+    w = zeros(ytype, m + n - 1)
     @inbounds for j in 1:m, k in 1:n
         w[j+k-1] += u[j]*v[k]
     end
     return w[n:end-n+1]
 end
 
-function _vandermonde!(V::Matrix{T1}, hw::T2, order_range::UnitRange{T2}) where {T1 <: Float64, T2 <: Int64}
+function _vandermonde!(V::Matrix{T1}, hw::T2, order_range::UnitRange{T2}) where {T1 <: Number, T2 <: Integer}
     @inbounds for i in -hw:hw, j in order_range
         V[i+hw+1, j+1] = i^j
     end
 end
 
-function _coefficients(V::Matrix{T1}, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
+function _coefficients(V::Matrix{T1}, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Number, T2 <: Integer}
     Vqr = qr(V')
     c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range)))
     c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
     return reverse(c)
 end
 
-function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
+function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Number, T2 <: Integer}
     W = diagm(wts)
     VtW = V' * W
     VtWV = VtW * V
@@ -135,14 +136,14 @@ function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRang
     return reverse(c)
 end
 
-function _onehot(i::T, m::T) where T <: Int64
+function _onehot(i::T, m::T) where T <: Integer
     m > i || throw(ArgumentError("length of vector must be greater than the position"))
     oh = zeros(m)
     oh[i] = 1.0
     return oh
 end
 
-function _padding_signal(y::AbstractVector, hw::Int64)
+function _padding_signal(y::AbstractVector, hw::Integer)
     initvals = 2*y[1] .- reverse(y[2:hw+1])
     endvals = 2*y[end] .- reverse(y[end-hw:end-1])
     return vcat(initvals, y, endvals)
