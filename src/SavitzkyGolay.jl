@@ -4,13 +4,13 @@ export savitzky_golay, SGolay, SGolayResults
 
 using LinearAlgebra
 
-struct SGolay{T1 <: Signed, T2 <: Real}
+struct SGolay{T1 <: Signed, T2 <: Number}
     w::T1        # Window size
     order::T1    # Polynomial order
     deriv::T1    # Derivative order
     rate::T2     # Rate
     haswts::Bool
-    function SGolay(w::T1, order::T1, deriv::T1, rate::T2; haswts::Bool=false) where {T1 <: Signed, T2 <: Real}
+    function SGolay(w::T1, order::T1, deriv::T1, rate::T2; haswts::Bool=false) where {T1 <: Signed, T2 <: Number}
         isodd(w) || throw(ArgumentError("w must be an odd number."))
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
@@ -22,11 +22,11 @@ end
 SGolay(w, order) = SGolay(w, order, 0, 1.0)
 SGolay(w, order, deriv) = SGolay(w, order, deriv, 1.0)
 
-struct SGolayResults{T <: Float64}
-    y::Vector{T}
+struct SGolayResults{Ty <: Number, Tc<:Number, Tv<:Number}
+    y::Vector{Ty}
     params::SGolay
-    coeff::Vector{T}
-    Vdm::Matrix{T}
+    coeff::Vector{Tc}
+    Vdm::Matrix{Tv}
 end
 
 function (p::SGolay)(y::AbstractVector)
@@ -40,7 +40,7 @@ end
 function savitzky_golay(
         y::AbstractVector, window_size::T0, order::T0;
         deriv::T0=0, rate::T1=1.0, haswts=false,
-    ) where {T0 <: Signed, T1 <: Real}
+    ) where {T0 <: Signed, T1 <: Number}
     y_, p = _check_input_sg(y, window_size, order, deriv, rate, haswts)
     return _savitzky_golay(y_, p)
 end
@@ -105,44 +105,45 @@ function _convolve_1d(u::AbstractVector, v::Vector)
     m = length(u)
     n = length(v)
     m > n || throw(ArgumentError("length of signal u must be greater than length of kernel v."))
-    w = zeros(m + n - 1)
+    wtype = typeof(u[begin]*v[begin])
+    w = zeros(wtype, m + n - 1)
     @inbounds for j in 1:m, k in 1:n
         w[j+k-1] += u[j]*v[k]
     end
     return w[n:end-n+1]
 end
 
-function _vandermonde!(V::Matrix{T1}, hw::T2, order_range::UnitRange{T2}) where {T1 <: Float64, T2 <: Int64}
+function _vandermonde!(V::Matrix{T1}, hw::T2, order_range::UnitRange{T2}) where {T1 <: Number, T2 <: Integer}
     @inbounds for i in -hw:hw, j in order_range
         V[i+hw+1, j+1] = i^j
     end
 end
 
-function _coefficients(V::Matrix{T1}, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
+function _coefficients(V::Matrix{T1}, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Number, T2 <: Integer}
     Vqr = qr(V')
-    c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range)))
-    c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
+    c = Vqr.R \ (Vqr.Q' * _onehot(p.deriv + 1, length(order_range))) .* 
+        (p.rate)^(p.deriv) * factorial(p.deriv)
     return reverse(c)
 end
 
-function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Float64, T2 <: Int64}
+function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRange{T2}, p::SGolay) where {T1 <: Number, T2 <: Integer}
     W = diagm(wts)
     VtW = V' * W
     VtWV = VtW * V
     invVtWV = inv(VtWV)
-    c = vec( _onehot(p.deriv + 1, length(order_range))' * invVtWV * VtW )
-    c .*= (p.rate)^(p.deriv) * factorial(p.deriv)
+    c = vec( _onehot(p.deriv + 1, length(order_range))' * invVtWV * VtW ) .*
+        (p.rate)^(p.deriv) * factorial(p.deriv)
     return reverse(c)
 end
 
-function _onehot(i::T, m::T) where T <: Int64
+function _onehot(i::T, m::T) where T <: Integer
     m > i || throw(ArgumentError("length of vector must be greater than the position"))
     oh = zeros(m)
     oh[i] = 1.0
     return oh
 end
 
-function _padding_signal(y::AbstractVector, hw::Int64)
+function _padding_signal(y::AbstractVector, hw::Integer)
     initvals = 2*y[1] .- reverse(y[2:hw+1])
     endvals = 2*y[end] .- reverse(y[end-hw:end-1])
     return vcat(initvals, y, endvals)
