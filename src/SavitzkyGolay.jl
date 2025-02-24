@@ -15,6 +15,7 @@ struct SGolay{T1 <: Signed, T2 <: Number}
         w ≥ 1 || throw(ArgumentError("w must greater than or equal to 1."))
         w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
         deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
+        deriv ≤ order || throw(ArgumentError("Order to small for the requested derivative (deriv ≤ order)."))
         return new{T1, T2}(w, order, deriv, rate, haswts)
     end
 end
@@ -87,6 +88,7 @@ function _check_input_sg(y::AbstractVector, w, order, deriv, rate, haswts=false)
     w ≥ order + 2 || throw(ArgumentError("w too small for the polynomial order chosen (w ≥ order + 2)."))
     length(y) > 1 || throw(ArgumentError("vector x must have more than one element."))
     deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
+    deriv ≤ order || throw(ArgumentError("Order to small for the requested derivative (deriv ≤ order)."))
     return Float64.(y), SGolay(w, order, deriv, rate)
 end
 
@@ -98,6 +100,7 @@ function _check_input_sg(y::AbstractVector, wts::AbstractVector, w, order, deriv
     deriv ≥ 0 || throw(ArgumentError("deriv must be a nonnegative integer."))
     length(wts) == w ||  throw(ArgumentError("wts vector length must equal window size"))
     all(wts .> 0) ||  throw(ArgumentError("wts vector must be positive definite"))
+    deriv ≤ order || throw(ArgumentError("Order to small for the requested derivative (deriv ≤ order)."))
     return Float64.(y), Float64.(wts), SGolay(w, order, deriv, rate, haswts=haswts)
 end
 
@@ -137,7 +140,7 @@ function _coefficients(V::Matrix{T1}, wts::AbstractVector, order_range::UnitRang
 end
 
 function _onehot(i::T, m::T) where T <: Integer
-    m > i || throw(ArgumentError("length of vector must be greater than the position"))
+    m ≥ i || throw(ArgumentError("length of vector must be greater than the position"))
     oh = zeros(m)
     oh[i] = 1.0
     return oh

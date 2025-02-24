@@ -6,6 +6,7 @@ using Test
     @test_throws ArgumentError SGolay(2,2)                    # window size must be odd
     @test_throws ArgumentError SGolay(3,2)                    # windows size must be > 2+order
     @test_throws ArgumentError SGolay(5,2,-2)                 # derivative must be non-negative
+    @test_throws ArgumentError SGolay(5,2,3)                  # derivative must be ≤ order
 end
 
 t = LinRange(-4, 4, 500)
@@ -15,6 +16,7 @@ t = LinRange(-4, 4, 500)
     @test_throws ArgumentError savitzky_golay(t,2,2)          # window size must be odd
     @test_throws ArgumentError savitzky_golay(t,3,2)          # windows size must be > 2+order
     @test_throws ArgumentError savitzky_golay(t,5,2;deriv=-1) # derivative must be non-negative
+    @test_throws ArgumentError savitzky_golay(t,5,2;deriv=3)  # derivative must be ≤ order
 end
 
 # Plain call
@@ -58,3 +60,4 @@ end
     y1_sg_tri = savitzky_golay(y1, tri_11, 11, 2)
     y2_sg_tri = savitzky_golay(y2, tri_21, 21, 4)
 end
+
